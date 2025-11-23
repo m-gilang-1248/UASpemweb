@@ -16,17 +16,17 @@ Dokumen ini bertujuan untuk mendefinisikan kebutuhan fungsional dan non-fungsion
 
 ### 1.2. Ruang Lingkup MVP (RLG001)
 MVP akan fokus pada fungsionalitas inti berikut:
-*   (F001) Registrasi dan login untuk pemain dan admin SC.
-*   (F002) Pencarian lapangan berdasarkan jenis olahraga dan kota.
-*   (F003) Tampilan detail SC dan lapangan (termasuk harga dan foto).
-*   (F004) Tampilan ketersediaan slot lapangan secara real-time.
-*   (F005) Proses pemesanan dasar oleh pemain (opsi pembayaran awal: konfirmasi tanpa pembayaran online / transfer bank manual).
-*   (F006) Manajemen profil SC dasar oleh admin SC.
-*   (F007) Manajemen lapangan (tambah/edit/hapus) oleh admin SC.
-*   (F008) Manajemen jadwal dan ketersediaan manual oleh admin SC (blokir slot, tambah booking manual).
-*   (F009) Tampilan daftar pemesanan untuk pemain dan admin SC.
-*   (F010) (Jika transfer manual) Konfirmasi pembayaran oleh admin SC.
-*   (F011) Manajemen dasar tenant (Sports Center) oleh Admin Platform.
+*   **(F001)** Registrasi dan login untuk pemain dan admin SC.
+*   **(F002)** Pencarian lapangan berdasarkan jenis olahraga dan kota.
+*   **(F003)** Tampilan detail SC dan lapangan (termasuk harga dan foto).
+*   **(F004)** Tampilan ketersediaan slot lapangan secara real-time.
+*   **(F005)** Proses pemesanan dasar oleh pemain (opsi pembayaran awal: konfirmasi tanpa pembayaran online / transfer bank manual).
+*   **(F006)** Manajemen profil SC dasar oleh admin SC.
+*   **(F007)** Manajemen lapangan (tambah/edit/hapus) oleh admin SC.
+*   **(F008)** Manajemen jadwal dan ketersediaan manual oleh admin SC (blokir slot, tambah booking manual).
+*   **(F009)** Tampilan daftar pemesanan untuk pemain dan admin SC.
+*   **(F010)** (Jika transfer manual) Konfirmasi pembayaran oleh admin SC.
+*   **(F011)** Manajemen dasar tenant (Sports Center) oleh Admin Platform.
 
 ### 1.3. Definisi, Akronim, dan Singkatan (DEF001)
 *   **SC:** Sports Center (Pusat Olahraga)
@@ -56,20 +56,20 @@ Aplikasi ini adalah platform SaaS multi-tenant yang menghubungkan pemain dengan 
 *   **Frontend (Aplikasi Mobile):**
     *   **Framework:** Flutter (Target: Android & iOS)
     *   **Bahasa:** Dart
-    *   **Manajemen State:** (Pilih salah satu, misal: Provider, BLoC/Cubit, Riverpod)
-    *   **Routing:** (Navigator 2.0 atau package seperti go_router)
-    *   **HTTP Client:** `http` package atau `dio`
+    *   **Manajemen State:** (Pilih salah satu, misal: BLoC/Cubit atau Riverpod untuk skalabilitas)
+    *   **Routing:** `go_router` (Untuk routing berbasis state dan deep linking)
+    *   **HTTP Client:** `dio` (Untuk penanganan request/response yang lebih advanced)
     *   **SDK Appwrite:** `appwrite` package untuk Flutter
 *   **Backend (BaaS):**
-    *   **Platform:** Appwrite (Self-hosted atau Cloud jika tersedia dan sesuai)
+    *   **Platform:** Appwrite (Self-hosted atau Cloud)
     *   **Database:** Appwrite Database (NoSQL, berbasis dokumen)
-    *   **Otentikasi:** Appwrite Authentication (Email/Password, OAuth2 opsional di masa depan)
+    *   **Otentikasi:** Appwrite Authentication (Email/Password)
     *   **Penyimpanan File:** Appwrite Storage (Untuk gambar, bukti bayar)
-    *   **Realtime:** Appwrite Realtime (Untuk update ketersediaan)
-    *   **Serverless Functions:** Appwrite Functions (Dart, Node.js, Python, dll. - untuk logika backend, validasi, otomatisasi)
+    *   **Realtime:** Appwrite Realtime (Untuk update ketersediaan jadwal)
+    *   **Serverless Functions:** Appwrite Functions (Dart/Node.js untuk logika backend, validasi, dan otomatisasi)
 *   **Desain & Prototyping (Opsional):** Figma, Adobe XD
-*   **Version Control:** Git (misal: GitHub, GitLab, Bitbucket)
-*   **Project Management:** (misal: Trello, Jira, Asana)
+*   **Version Control:** Git (GitHub, GitLab)
+*   **Project Management:** Trello, Jira, atau Notion
 
 ---
 
@@ -94,12 +94,12 @@ Aplikasi ini adalah platform SaaS multi-tenant yang menghubungkan pemain dengan 
         participant API as Appwrite API
 
         P->>App: Buka Aplikasi, Pilih "Daftar"
-        App->>P: Tampilkan Form Registrasi (Nama, Email, Password, Konfirmasi Pass, Pilih Peran [Player/Calon Admin SC])
+        App->>P: Tampilkan Form Registrasi (Nama, Email, Password, Pilih Peran [Pemain / Ingin jadi Admin SC])
         P->>App: Isi Form, Submit
-        App->>API: Request `account.create()` dengan data pengguna & peran awal
+        App->>API: Request `account.create()` dengan data & peran (misal: 'player' atau 'pending_sc_admin')
         API-->>App: Respons Sukses (user object) / Error
         alt Sukses
-            App->>P: Tampilkan Pesan Sukses, Arahkan ke Login / Dashboard
+            App->>P: Tampilkan Pesan Sukses, Arahkan ke Login
         else Error
             App->>P: Tampilkan Pesan Error (misal: email sudah ada)
         end
@@ -118,9 +118,9 @@ Aplikasi ini adalah platform SaaS multi-tenant yang menghubungkan pemain dengan 
         App->>API: Request `account.createEmailSession()`
         API-->>App: Respons Sukses (session object) / Error
         alt Sukses
-            App->>API: Request `account.get()` (untuk data user detail, termasuk peran)
+            App->>API: Request `account.get()` (untuk data user detail, termasuk peran dari prefs)
             API-->>App: User data
-            App->>P: Arahkan ke Dashboard sesuai peran
+            App->>P: Arahkan ke Dashboard sesuai peran (Player/Admin SC)
         else Error
             App->>P: Tampilkan Pesan Error (misal: email/password salah)
         end
@@ -133,22 +133,18 @@ Aplikasi ini adalah platform SaaS multi-tenant yang menghubungkan pemain dengan 
         participant App as Aplikasi (Flutter)
         participant API as Appwrite API
 
-        P->>App: Pilih Opsi "Logout"
+        P->>App: Pilih Opsi "Logout" di Profil
         App->>API: Request `account.deleteSession('current')`
         API-->>App: Respons Sukses / Error
         App->>P: Arahkan ke Halaman Login
     ```
 *   **Kriteria Penerimaan (KP001):**
-    *   Pengguna berhasil membuat akun baru dan data tersimpan di collection `users` dengan peran yang sesuai.
-    *   Pengguna berhasil login dengan kredensial yang valid dan sesi dibuat.
+    *   Pengguna berhasil membuat akun baru dan data tersimpan di collection `users`.
+    *   Peran pengguna disimpan di `prefs.role`. Calon Admin SC diberi peran `pending_sc_admin`.
+    *   Pengguna berhasil login dan diarahkan ke dashboard yang benar.
     *   Pengguna berhasil logout dan sesi dihapus.
     *   Notifikasi error jelas ditampilkan jika registrasi/login gagal.
-    *   Password disimpan terenkripsi (dikelola Appwrite).
-    *   Calon Admin SC mendaftar dengan peran sementara (misal, `pending_sc_admin`) yang perlu approval dari USR_SUPER_ADMIN.
-
----
-
-*(Lanjutkan format serupa untuk fitur F002 hingga F011, termasuk User Story, Alur Sistem dengan diagram Mermaid, dan Kriteria Penerimaan. Saya akan memberikan contoh untuk beberapa fitur lagi dan Anda bisa mengembangkannya)*
+    *   Password disimpan terenkripsi (dikelola oleh Appwrite).
 
 ---
 
@@ -157,7 +153,6 @@ Aplikasi ini adalah platform SaaS multi-tenant yang menghubungkan pemain dengan 
 *   **Peran:** USR_PLAYER
 *   **User Story:**
     *   (US004) "Sebagai pemain, saya ingin mencari SC berdasarkan jenis olahraga (misal: futsal, badminton) dan kota agar menemukan pilihan yang relevan."
-    *   (US005) "Sebagai pemain, saya ingin melihat daftar SC yang cocok dengan kriteria pencarian saya."
 *   **Alur Sistem & Pengguna (AS004):**
     ```mermaid
     sequenceDiagram
@@ -166,26 +161,24 @@ Aplikasi ini adalah platform SaaS multi-tenant yang menghubungkan pemain dengan 
         participant API as Appwrite API
 
         P->>App: Di halaman utama, input/pilih jenis olahraga & input kota
-        App->>App: Validasi input
-        App->>API: Request `databases.listDocuments('sport_centers')` dengan filter (query) berdasarkan kota DAN join/lookup ke `fields` untuk filter jenis olahraga.
-        API-->>App: Daftar SC yang cocok / Daftar Kosong / Error
-        alt Ditemukan
-            App->>P: Tampilkan daftar SC (Nama, Alamat singkat, mungkin 1 foto utama)
-        else Tidak Ditemukan
-            App->>P: Tampilkan pesan "Tidak ada SC ditemukan"
-        end
+        App->>API: Request `databases.listDocuments('sport_centers')` dengan Query filter `sc_city`
+        API-->>App: Daftar SC yang cocok dengan kota
+        App->>App: Filter hasil di sisi klien berdasarkan jenis olahraga yang tersedia di SC tersebut (atau query ke `fields` jika diperlukan performa lebih baik)
+        App->>P: Tampilkan daftar SC yang relevan (Nama, Alamat singkat, foto utama)
     ```
 *   **Kriteria Penerimaan (KP002):**
-    *   Hasil pencarian menampilkan daftar SC yang aktif dan sesuai dengan kriteria jenis olahraga dan kota.
-    *   Jika tidak ada hasil, pesan informatif ditampilkan.
-    *   Pencarian efisien (memanfaatkan indeks di Appwrite).
+    *   Hasil pencarian menampilkan daftar SC yang berstatus `active` dan sesuai dengan kriteria kota.
+    *   Aplikasi dapat menampilkan SC yang memiliki minimal satu lapangan dengan jenis olahraga yang dicari.
+    *   Jika tidak ada hasil, pesan informatif "Tidak ada hasil ditemukan" ditampilkan.
+
+---
 
 **3.1.3. (F003) Tampilan Detail Sports Center & Lapangan**
 *   **ID Fitur:** F003
 *   **Peran:** USR_PLAYER
 *   **User Story:**
-    *   (US006) "Sebagai pemain, saya ingin memilih SC dari hasil pencarian untuk melihat detail lengkapnya (alamat, kontak, foto, jam operasional, daftar lapangan)."
-    *   (US007) "Sebagai pemain, saya ingin memilih lapangan dari daftar di SC untuk melihat detailnya (nama, jenis, harga per jam, deskripsi, foto)."
+    *   (US006) "Sebagai pemain, setelah memilih SC dari hasil pencarian, saya ingin melihat detailnya (alamat, foto, jam buka, daftar lapangan)."
+    *   (US007) "Sebagai pemain, setelah memilih lapangan, saya ingin melihat detail spesifiknya (harga, foto, tipe)."
 *   **Alur Sistem & Pengguna (AS005):**
     ```mermaid
     sequenceDiagram
@@ -193,22 +186,23 @@ Aplikasi ini adalah platform SaaS multi-tenant yang menghubungkan pemain dengan 
         participant App as Aplikasi (Flutter)
         participant API as Appwrite API
 
-        P->>App: Pilih SC dari daftar hasil pencarian
+        P->>App: Pilih satu SC dari daftar hasil pencarian
         App->>API: Request `databases.getDocument('sport_centers', centerId)`
-        API-->>App: Detail SC
         App->>API: Request `databases.listDocuments('fields')` dengan filter `centerId`
-        API-->>App: Daftar lapangan untuk SC tersebut
-        App->>P: Tampilkan halaman detail SC (info, foto SC, daftar lapangan [nama, jenis, harga singkat])
+        API-->>App: Detail SC dan Daftar Lapangan
+        App->>P: Tampilkan halaman detail SC (info, foto, jam buka, daftar lapangan)
 
         P->>App: Pilih satu lapangan dari daftar
         App->>API: Request `databases.getDocument('fields', fieldId)`
         API-->>App: Detail lapangan
-        App->>P: Tampilkan halaman detail lapangan (info lengkap, harga, deskripsi, foto lapangan)
+        App->>P: Tampilkan halaman detail lapangan (info lengkap, harga, foto, deskripsi)
     ```
 *   **Kriteria Penerimaan (KP003):**
-    *   Informasi detail SC dan lapangan ditampilkan akurat dan lengkap sesuai data di backend.
-    *   Foto-foto (jika ada) ditampilkan dengan benar.
-    *   Harga lapangan jelas terlihat.
+    *   Informasi detail SC dan lapangan ditampilkan dengan akurat.
+    *   Galeri foto untuk SC dan lapangan dapat dilihat.
+    *   Harga per jam untuk setiap lapangan jelas terlihat.
+
+---
 
 **3.1.4. (F004) Tampilan Ketersediaan Real-time Sederhana**
 *   **ID Fitur:** F004
@@ -220,28 +214,218 @@ Aplikasi ini adalah platform SaaS multi-tenant yang menghubungkan pemain dengan 
     sequenceDiagram
         participant P as Pemain
         participant App as Aplikasi (Flutter)
-        participant API as Appwrite API (Database & Realtime)
+        participant API as Appwrite API (DB & Realtime)
 
         P->>App: Di halaman detail lapangan, pilih tanggal
-        App->>API: Request `databases.listDocuments('bookings')` dengan filter `fieldId` dan rentang `bookingDate` (untuk tanggal dipilih).
-        API-->>App: Daftar booking yang ada untuk tanggal & lapangan tsb.
-        App->>App: Proses data booking, tentukan slot tersedia/dipesan (misal per jam dari jam buka-tutup SC)
-        App->>P: Tampilkan kalender/jadwal slot waktu dengan statusnya.
-        App->>API: Subscribe ke event Realtime untuk collection `bookings` dengan filter `fieldId` dan `bookingDate`.
-        Note over API,App: Jika ada booking baru/perubahan status di `bookings` untuk field & tanggal ini...
-        API->>App: Kirim update Realtime.
-        App->>App: Update UI jadwal ketersediaan.
-        App->>P: (UI Terupdate)
+        App->>API: Request `databases.listDocuments('bookings')` dengan filter `fieldId` & `bookingDate`
+        App->>API: Request `databases.listDocuments('blocked_slots')` dengan filter `fieldId` & `block_date`
+        API-->>App: Daftar booking & slot diblokir yang ada
+        App->>App: Proses data, buat list slot per jam (dari jam buka-tutup), tandai yang sudah dipesan/diblokir
+        App->>P: Tampilkan jadwal slot waktu dengan statusnya
+        
+        Note right of App: Subscribe ke perubahan di `bookings` & `blocked_slots`
+        App->>API: Subscribe ke event Realtime untuk collection `bookings` & `blocked_slots` dengan filter `fieldId`
+        API->>App: (Jika ada perubahan) Kirim update Realtime
+        App->>App: Update UI jadwal secara otomatis
     ```
 *   **Kriteria Penerimaan (KP004):**
-    *   Jadwal ketersediaan slot akurat berdasarkan data `bookings`.
-    *   Perubahan ketersediaan (booking baru, blokir oleh admin) tercermin di UI pemain dengan cepat (< 5-10 detik) tanpa perlu refresh manual.
-    *   Slot yang di luar jam operasional SC tidak ditampilkan sebagai tersedia.
+    *   Jadwal ketersediaan akurat, menggabungkan data dari `bookings` (status 'confirmed' dan 'pending_payment') dan `blocked_slots`.
+    *   Perubahan ketersediaan tercermin di UI pemain dengan cepat (< 5 detik) tanpa refresh manual.
+    *   Slot di luar jam operasional SC tidak dapat dipilih.
 
 ---
-*(Lanjutkan untuk F005 - F011 dengan detail serupa)*
+
+**3.1.5. (F005) Proses Pemesanan Dasar oleh Pemain**
+*   **ID Fitur:** F005
+*   **Peran:** USR_PLAYER
+*   **User Story:**
+    *   (US009) "Sebagai pemain, saya ingin memilih slot waktu yang tersedia, mengisi detail, dan menyelesaikan pemesanan dengan status 'Menunggu Pembayaran'."
+*   **Alur Sistem & Pengguna (AS007):**
+    ```mermaid
+    sequenceDiagram
+        participant P as Pemain
+        participant App as Aplikasi (Flutter)
+        participant API as Appwrite API
+
+        P->>App: Pilih slot waktu yang tersedia, klik "Pesan"
+        App->>P: Tampilkan halaman ringkasan pemesanan (lapangan, jadwal, total harga)
+        P->>App: Konfirmasi pemesanan
+        App->>API: Request `databases.createDocument('bookings', data)`
+        Note over API: Data: `playerId`, `fieldId`, `centerId`, jadwal, harga, `status: 'pending_payment'`
+        API-->>App: Respons Sukses (dokumen booking baru) / Error
+        alt Sukses
+            App->>P: Tampilkan halaman sukses pemesanan dengan instruksi pembayaran (transfer manual)
+        else Error
+            App->>P: Tampilkan pesan error (misal: "Slot sudah tidak tersedia")
+        end
+    ```
+*   **Kriteria Penerimaan (KP005):**
+    *   Pemesanan baru berhasil dibuat di collection `bookings` dengan status `pending_payment`.
+    *   Pemain melihat halaman konfirmasi dengan detail booking dan instruksi pembayaran.
+    *   Jika slot sudah diambil pengguna lain saat proses, pemesanan gagal dengan pesan yang jelas.
+
 ---
 
+**3.1.6. (F006 & F007) Manajemen Profil SC dan Lapangan oleh Admin SC**
+*   **ID Fitur:** F006, F007
+*   **Peran:** USR_ADMIN_SC
+*   **User Story:**
+    *   (US010) "Sebagai admin SC, saya ingin bisa mengedit informasi dasar SC saya (nama, alamat, jam operasional, foto)."
+    *   (US011) "Sebagai admin SC, saya ingin bisa menambah, mengedit, dan menghapus (menonaktifkan) lapangan di SC saya."
+*   **Alur Sistem & Pengguna (AS008):**
+    ```mermaid
+    sequenceDiagram
+        participant Admin as Admin SC
+        participant App as Aplikasi (Flutter)
+        participant API as Appwrite API
+
+        Admin->>App: Login, masuk ke Dashboard Admin
+        
+        opt Edit Profil SC
+            Admin->>App: Pilih "Profil SC"
+            App->>API: Ambil data `sport_centers` miliknya
+            API-->>App: Detail SC
+            App->>Admin: Tampilkan form edit profil SC
+            Admin->>App: Ubah data, Simpan
+            App->>API: Request `databases.updateDocument('sport_centers', ...)`
+            API-->>App: Respons Sukses
+        end
+
+        opt Manajemen Lapangan
+            Admin->>App: Pilih "Manajemen Lapangan"
+            App->>API: Ambil daftar `fields` miliknya
+            API-->>App: Daftar Lapangan
+            App->>Admin: Tampilkan daftar lapangan (opsi Tambah/Edit/Hapus)
+            Admin->>App: Lakukan aksi (misal: Edit Lapangan X)
+            App->>API: Request `databases.updateDocument('fields', ...)` atau `createDocument` / `deleteDocument`
+            API-->>App: Respons Sukses
+        end
+    ```
+*   **Kriteria Penerimaan (KP006, KP007):**
+    *   Admin SC hanya dapat melihat dan mengelola data SC dan lapangan yang terkait dengannya.
+    *   Perubahan pada profil SC dan data lapangan berhasil disimpan ke database.
+    *   Admin dapat menambah lapangan baru, mengedit yang sudah ada, atau mengubah statusnya menjadi tidak aktif.
+
+---
+
+**3.1.7. (F008) Manajemen Jadwal Manual oleh Admin SC**
+*   **ID Fitur:** F008
+*   **Peran:** USR_ADMIN_SC
+*   **User Story:**
+    *   (US012) "Sebagai admin SC, saya ingin bisa memblokir slot waktu tertentu untuk maintenance atau acara internal."
+    *   (US013) "Sebagai admin SC, saya ingin bisa menambahkan booking secara manual untuk pelanggan offline (walk-in)."
+*   **Alur Sistem & Pengguna (AS009):**
+    ```mermaid
+    sequenceDiagram
+        participant Admin as Admin SC
+        participant App as Aplikasi (Flutter)
+        participant API as Appwrite API
+
+        Admin->>App: Buka Tampilan Jadwal Lapangan
+        
+        opt Blokir Slot
+            Admin->>App: Pilih slot waktu, pilih "Blokir Slot"
+            App->>Admin: Tampilkan form blokir (alasan, dll)
+            Admin->>App: Konfirmasi blokir
+            App->>API: Request `databases.createDocument('blocked_slots', data)`
+            API-->>App: Sukses
+        end
+
+        opt Tambah Booking Manual
+            Admin->>App: Pilih slot waktu, pilih "Tambah Booking"
+            App->>Admin: Tampilkan form booking (nama pelanggan, dll)
+            Admin->>App: Konfirmasi booking
+            App->>API: Request `databases.createDocument('bookings', data)`
+            Note over API: `booked_by_role: 'sc_admin'`, `status: 'confirmed'`
+            API-->>App: Sukses
+        end
+    ```
+*   **Kriteria Penerimaan (KP008):**
+    *   Admin SC berhasil membuat entri baru di `blocked_slots`.
+    *   Admin SC berhasil membuat entri baru di `bookings` untuk pelanggan offline.
+    *   Slot yang diblokir atau di-booking manual akan langsung tidak tersedia di tampilan pemain (via Realtime).
+
+---
+
+**3.1.8. (F009 & F010) Daftar Pemesanan dan Konfirmasi Pembayaran**
+*   **ID Fitur:** F009, F010
+*   **Peran:** USR_PLAYER, USR_ADMIN_SC
+*   **User Story:**
+    *   (US014) "Sebagai pemain, saya ingin melihat riwayat pemesanan saya dan mengunggah bukti bayar untuk pesanan yang 'Menunggu Pembayaran'."
+    *   (US015) "Sebagai admin SC, saya ingin melihat daftar semua pemesanan dan bisa mengkonfirmasi atau menolak pembayaran yang masuk."
+*   **Alur Sistem & Pengguna (AS010):**
+    ```mermaid
+    sequenceDiagram
+        participant P as Pemain
+        participant Admin as Admin SC
+        participant App as Aplikasi (Flutter)
+        participant API as Appwrite API
+
+        P->>App: Buka "Riwayat Pesanan"
+        App->>API: Ambil `bookings` dengan filter `player_user_id`
+        API-->>App: Daftar pesanan pemain
+        P->>App: Pilih pesanan `pending_payment`, unggah bukti bayar
+        App->>API: Request `storage.createFile()` untuk upload gambar
+        API-->>App: File ID/URL
+        App->>API: Request `databases.updateDocument('bookings', bookingId)` dengan `payment_proof_url` dan ubah status ke `waiting_for_sc_confirmation`
+
+        Admin->>App: Buka "Daftar Pesanan"
+        App->>API: Ambil `bookings` dengan filter `centerId` miliknya
+        API-->>App: Daftar semua pesanan di SC
+        Admin->>App: Filter/pilih pesanan dengan status `waiting_for_sc_confirmation`
+        Admin->>App: Lihat bukti bayar, pilih "Konfirmasi" atau "Tolak"
+        App->>API: Request `databases.updateDocument('bookings', bookingId)` ubah status ke `confirmed` atau `payment_rejected`
+    ```
+*   **Kriteria Penerimaan (KP009, KP010):**
+    *   Pemain dapat melihat daftar pesanannya dan mengunggah bukti bayar.
+    *   Admin SC dapat melihat semua pesanan di tempatnya.
+    *   Admin SC dapat mengubah status pemesanan dari `waiting_for_sc_confirmation` menjadi `confirmed` atau `payment_rejected`.
+    *   Perubahan status booking dapat dilihat oleh pemain di riwayat pesanannya.
+
+---
+
+**3.1.9. (F011) Manajemen Tenant oleh Admin Platform**
+*   **ID Fitur:** F011
+*   **Peran:** USR_SUPER_ADMIN
+*   **User Story:**
+    *   (US016) "Sebagai admin platform, saya ingin melihat daftar pengguna yang mendaftar sebagai admin SC dan bisa menyetujui atau menolak pendaftaran mereka."
+    *   (US017) "Sebagai admin platform, saat menyetujui, saya ingin bisa membuat entri SC baru untuk mereka dan menetapkan mereka sebagai admin."
+*   **Alur Sistem & Pengguna (AS011):**
+    ```mermaid
+    sequenceDiagram
+        participant SuperAdmin as Admin Platform
+        participant App as Aplikasi (Web/Mobile)
+        participant API as Appwrite API
+        participant Func as Appwrite Function
+
+        SuperAdmin->>App: Login, masuk ke Panel Super Admin
+        App->>API: Ambil `users` dengan filter `prefs.role: 'pending_sc_admin'`
+        API-->>App: Daftar calon admin SC
+        App->>SuperAdmin: Tampilkan daftar calon admin
+        
+        SuperAdmin->>App: Pilih calon admin, klik "Setujui"
+        App->>SuperAdmin: Tampilkan form untuk membuat SC baru (nama SC, kota, dll)
+        SuperAdmin->>App: Isi form, submit
+        App->>Func: Panggil Function 'approveScAdmin' dengan `userId` & data SC
+        
+        Func->>API: 1. Buat `sport_centers` baru, dapatkan `centerId`
+        Func->>API: 2. Buat Team baru `sc_[centerId]_admins`, dapatkan `teamId`
+        Func->>API: 3. Update `sport_centers` dengan `sc_admin_team_id`
+        Func->>API: 4. Tambah `userId` ke Team baru
+        Func->>API: 5. Update user `prefs` -> `role: 'sc_admin'`, `assignedCenterId: centerId`
+        Func-->>App: Respons Sukses
+        App->>SuperAdmin: Tampilkan pesan "Admin SC berhasil disetujui"
+    ```
+*   **Kriteria Penerimaan (KP011):**
+    *   Super Admin dapat melihat daftar pengguna dengan peran `pending_sc_admin`.
+    *   Setelah disetujui melalui Function:
+        *   Sebuah dokumen baru dibuat di collection `sport_centers`.
+        *   Sebuah Team baru dibuat di Appwrite untuk admin SC tersebut.
+        *   Pengguna ditambahkan ke Team tersebut.
+        *   Peran pengguna di `users.prefs.role` diubah menjadi `sc_admin`.
+        *   `users.prefs.assignedCenterId` diisi dengan ID SC yang baru dibuat.
+
+---
 ## 4. Kebutuhan Non-Fungsional (KNF)
 
 *   **KNF001: Kinerja (Performance)**
@@ -283,7 +467,6 @@ Aplikasi ini adalah platform SaaS multi-tenant yang menghubungkan pemain dengan 
     *   **KNF010.2:** Kebijakan retensi data (jika diperlukan) harus didefinisikan.
 
 ---
-
 ## 5. Skema Database Detail (Appwrite Collections) (DB001)
 ```mermaid
 erDiagram
@@ -552,3 +735,4 @@ Fokus rilis MVP adalah untuk meluncurkan fungsionalitas inti (F001-F011) dan keb
 
 ---
 *Dokumen ini bersifat hidup dan dapat diperbarui seiring dengan perkembangan proyek.*
+
